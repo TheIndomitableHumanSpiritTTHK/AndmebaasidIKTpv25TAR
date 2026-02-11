@@ -11,9 +11,45 @@ category_name varchar(30) unique,
 INSERT INTO categories(category_name)
 VALUES ('t-särk'), ('mantel'), ('pusa'), ('pintsak'), ('jope');
 
-
-
 SELECT * FROM categories
+
+--  protseduur mis lisab INSERT andmeid tabelisse categories
+CREATE PROCEDURE lisaCategory
+    @category_nimi VARCHAR(30)
+AS
+BEGIN
+    INSERT INTO categories (category_name) VALUES (@category_nimi);
+    SELECT * FROM categories;
+END;
+
+-- protseduuri kutse
+EXEC lisaCategory 'kingad';
+
+-- protseduur mis uuendab (UPDATE) category id järgi
+CREATE PROCEDURE uuendaCategory
+    @id INT,
+    @uus_nimi VARCHAR(30)
+AS
+BEGIN
+    SELECT * FROM categories;
+    UPDATE categories SET category_name = @uus_nimi WHERE category_id = @id;
+    SELECT * FROM categories;
+END;
+
+-- protseduuri kutse
+EXEC uuendaCategory 6, 'kostüüm';
+
+-- protseduur mis kustutab (DELETE) tabelist id järgi
+CREATE PROCEDURE kustutaCategory
+    @id INT
+AS
+BEGIN
+    SELECT * FROM categories;
+    DELETE FROM categories WHERE category_id = @id;
+    SELECT * FROM categories;
+END;
+
+EXEC kustutaCategory 6;
 
 -- tabeli brands loomine
 CREATE TABLE brands (
