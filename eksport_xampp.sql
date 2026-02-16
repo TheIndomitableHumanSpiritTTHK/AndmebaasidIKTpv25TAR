@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Loomise aeg: Veebr 16, 2026 kell 03:03 PL
+-- Loomise aeg: Veebr 16, 2026 kell 03:35 PL
 -- Serveri versioon: 10.4.32-MariaDB
 -- PHP versioon: 8.2.12
 
@@ -37,6 +37,12 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `kustutaCategory` (IN `id` INT)   BE
     SELECT * FROM categories;
 END$$
 
+CREATE DEFINER=`root`@`localhost` PROCEDURE `kustutaKlient` (IN `id` INT)   BEGIN
+    SELECT * FROM customers;
+    DELETE FROM customers WHERE customer_id = id;
+    SELECT * FROM customers;
+END$$
+
 CREATE DEFINER=`root`@`localhost` PROCEDURE `lisaBrand` (IN `brand_nimi` VARCHAR(30))   BEGIN
 	INSERT INTO brands (brand_name) VALUES (brand_nimi);
 	SELECT * from brands;
@@ -49,6 +55,12 @@ END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `otsing1tahte` (IN `taht` CHAR(1))   BEGIN
 	SELECT * FROM brands WHERE brand_name LIKE CONCAT(taht,'%');
+END$$
+
+CREATE DEFINER=`root`@`localhost` PROCEDURE `suurendadaStocks` ()   BEGIN
+SELECT * FROM stocks;
+UPDATE stocks SET quantity = quantity * 1.10;
+SELECT * FROM stocks;
 END$$
 
 CREATE DEFINER=`root`@`localhost` PROCEDURE `uuendaBrand` (IN `id` INT, IN `uus_brandNimi` VARCHAR(30))   BEGIN
@@ -113,6 +125,33 @@ INSERT INTO `categories` (`category_id`, `category_name`) VALUES
 -- --------------------------------------------------------
 
 --
+-- Tabeli struktuur tabelile `customers`
+--
+
+CREATE TABLE `customers` (
+  `customer_id` int(11) NOT NULL,
+  `first_name` varchar(30) NOT NULL,
+  `last_name` varchar(30) NOT NULL,
+  `phone` char(15) DEFAULT NULL,
+  `email` varchar(50) DEFAULT NULL,
+  `street` varchar(50) DEFAULT NULL,
+  `city` varchar(50) DEFAULT NULL,
+  `state_` varchar(50) DEFAULT NULL,
+  `zip_code` char(5) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Andmete tõmmistamine tabelile `customers`
+--
+
+INSERT INTO `customers` (`customer_id`, `first_name`, `last_name`, `phone`, `email`, `street`, `city`, `state_`, `zip_code`) VALUES
+(1, 'Mihhail', 'Mihhailenko', '+3725000001', 'mihhail@test.ee', 'Pärnu mnt 5', 'Tallinn', 'Harjumaa', '10141'),
+(2, 'Anna', 'Ivanova', '+3725000002', 'anna@test.ee', 'Narva mnt 20', 'Tallinn', 'Harjumaa', '10120'),
+(3, 'Karl', 'Tamm', '+3725000003', 'karl@test.ee', 'Lai 3', 'Tartu', 'Tartumaa', '51005');
+
+-- --------------------------------------------------------
+
+--
 -- Tabeli struktuur tabelile `products`
 --
 
@@ -142,6 +181,52 @@ INSERT INTO `products` (`product_id`, `product_name`, `brand_id`, `category_id`,
 (10, 'talvejope', 1, 5, 2024, 120.00),
 (11, 'kerge jope', 3, 5, 2022, 70.00);
 
+-- --------------------------------------------------------
+
+--
+-- Tabeli struktuur tabelile `stocks`
+--
+
+CREATE TABLE `stocks` (
+  `store_id` int(11) DEFAULT NULL,
+  `product_id` int(11) DEFAULT NULL,
+  `quantity` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Andmete tõmmistamine tabelile `stocks`
+--
+
+INSERT INTO `stocks` (`store_id`, `product_id`, `quantity`) VALUES
+(1, 3, 17),
+(1, 7, 9),
+(2, 10, 22);
+
+-- --------------------------------------------------------
+
+--
+-- Tabeli struktuur tabelile `stores`
+--
+
+CREATE TABLE `stores` (
+  `store_id` int(11) NOT NULL,
+  `store_name` varchar(30) NOT NULL,
+  `phone` varchar(15) DEFAULT NULL,
+  `email` varchar(50) DEFAULT NULL,
+  `street` varchar(50) DEFAULT NULL,
+  `city` varchar(50) DEFAULT NULL,
+  `state_` varchar(50) DEFAULT NULL,
+  `zip_code` char(15) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Andmete tõmmistamine tabelile `stores`
+--
+
+INSERT INTO `stores` (`store_id`, `store_name`, `phone`, `email`, `street`, `city`, `state_`, `zip_code`) VALUES
+(1, 'Tallinn Pood', '+3725551111', 'tallinn@pood.ee', 'Tartu mnt 1', 'Tallinn', 'Harjumaa', '10115'),
+(2, 'Tartu Pood', '+3725552222', 'tartu@pood.ee', 'Riia 10', 'Tartu', 'Tartumaa', '51010');
+
 --
 -- Indeksid tõmmistatud tabelitele
 --
@@ -160,12 +245,32 @@ ALTER TABLE `categories`
   ADD PRIMARY KEY (`category_id`);
 
 --
+-- Indeksid tabelile `customers`
+--
+ALTER TABLE `customers`
+  ADD PRIMARY KEY (`customer_id`),
+  ADD UNIQUE KEY `email` (`email`);
+
+--
 -- Indeksid tabelile `products`
 --
 ALTER TABLE `products`
   ADD PRIMARY KEY (`product_id`),
   ADD KEY `brand_id` (`brand_id`),
   ADD KEY `category_id` (`category_id`);
+
+--
+-- Indeksid tabelile `stocks`
+--
+ALTER TABLE `stocks`
+  ADD KEY `store_id` (`store_id`),
+  ADD KEY `product_id` (`product_id`);
+
+--
+-- Indeksid tabelile `stores`
+--
+ALTER TABLE `stores`
+  ADD PRIMARY KEY (`store_id`);
 
 --
 -- AUTO_INCREMENT tõmmistatud tabelitele
@@ -181,13 +286,25 @@ ALTER TABLE `brands`
 -- AUTO_INCREMENT tabelile `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `category_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+
+--
+-- AUTO_INCREMENT tabelile `customers`
+--
+ALTER TABLE `customers`
+  MODIFY `customer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT tabelile `products`
 --
 ALTER TABLE `products`
   MODIFY `product_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT tabelile `stores`
+--
+ALTER TABLE `stores`
+  MODIFY `store_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Tõmmistatud tabelite piirangud
@@ -199,6 +316,13 @@ ALTER TABLE `products`
 ALTER TABLE `products`
   ADD CONSTRAINT `products_ibfk_1` FOREIGN KEY (`brand_id`) REFERENCES `brands` (`brand_id`),
   ADD CONSTRAINT `products_ibfk_2` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`);
+
+--
+-- Piirangud tabelile `stocks`
+--
+ALTER TABLE `stocks`
+  ADD CONSTRAINT `stocks_ibfk_1` FOREIGN KEY (`store_id`) REFERENCES `stores` (`store_id`),
+  ADD CONSTRAINT `stocks_ibfk_2` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`);
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
